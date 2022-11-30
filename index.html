@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  </head>
+  <body>
+    <style>
+      canvas {
+        position: fixed;
+        top: 0;
+        left: 0; 
+      }
+    </style>
+    
+    <canvas id="canvas" width="600" height="400"></canvas>
+
+  
+    <script src="../three/three.js"></script>
+    <script src="../three/OrbitControls.js"></script>
+    <script src="../three/EventDispatcher.js"></script>
+    <script src="../util/cs336util.js"></script>
+    <script src="../shaders/lighting-shader.js"></script>
+    <script src="main.js"></script>
+    <script>window.onload = main</script>
+  </body>
+</html>
