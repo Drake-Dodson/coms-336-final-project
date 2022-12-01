@@ -1,24 +1,30 @@
 // vertex shader for lighting
 const vWaterShader = `
-varying vec2 vUv;
-varying float noise;
 
 void main() {
-  gl_Position = (projectionMatrix * modelViewMatrix);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `;
 
 // fragment shader for lighting
 const fWaterShader = `
-varying vec2 vUv;
-varying float noise;
 
 void main() {
-
-  // compose the colour using the UV coordinate
-  // and modulate it with the noise like ambient occlusion
-  vec3 color = vec3( 1.0, 1.0, 0.0 );
-  gl_FragColor = vec4( color.rgb, 1.0 );
-  
+  gl_FragColor = vec4( 0.0, 0.0, 1.0, 1.0 );
 }
 `;
+
+const vSkyboxShader = `
+
+void main() {
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const fSkyboxShader = `
+uniform vec3 color;
+
+void main() {
+  gl_FragColor = vec4(color, 1.0);
+}
+`
