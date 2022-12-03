@@ -39,6 +39,7 @@ var sun;
 var skybox;
 var water;
 var light;
+var sandyBottom;
 
 function loadSkyBox(sceneObj) {
   const skyboxSize = 4000
@@ -76,7 +77,8 @@ function renderWater(sceneObj){
     color: 0x0000ff,
     opacity: 0.3,
     transparent: true,
-    normalMap: loader.load('images/water-normal-map.png')
+    normalMap: loader.load('images/water-normal-map.png'),
+    normalMapType: THREE.ObjectSpaceNormalMap,
   })
   // material.normalMap.x = 15.8;
 
@@ -84,9 +86,19 @@ function renderWater(sceneObj){
   water = new THREE.Mesh(geometry, material)
   water.rotation.x = toRadians(-90)
   water.position.set(0, 0, 0)
-  // var normalMap = new THREE.MeshBasicMaterial({map: loader.load('images/water-normal-map.png')})
-  // water.normalMap = loader.load('images/water-normal-map.png')
   sceneObj.add(water)
+}
+
+function renderSand(sceneObj){
+  const geometry = new THREE.CircleGeometry(100, 100);
+  const material = new THREE.MeshPhongMaterial({
+    map: loader.load('images/sand.jpg')
+  })
+
+  sandyBottom = new THREE.Mesh(geometry, material)
+  sandyBottom.rotation.x = toRadians(-90)
+  sandyBottom.position.set(0, -15, 0)
+  sceneObj.add(sandyBottom)
 }
 
 
@@ -132,8 +144,6 @@ async function main(){
   
   camera.position.set(10, 10, 10);
   
-  renderer.render(scene, camera);
-  
   // Load FBO
   loadLights(lightPosition, sceneFBO);
   renderSun(sceneFBO);
@@ -146,6 +156,7 @@ async function main(){
   renderCube(scene);
   loadSkyBox(scene);
   renderWater(scene);
+  renderSand(scene);
 
   
   
@@ -159,7 +170,9 @@ async function main(){
     requestAnimationFrame(animate);
     //sun.position.set(camera.position.x + 1000, camera.position.y + 1000, camera.position.z + 1000);
     renderer.render(scene, camera);
-    rendererFBO.render(sceneFBO, camera);
+    //this causes a lot of lag for me, so I'm commenting it out for now while I work on stuff
+    //not sure what you'll do with it later, and how that will affect performance, but yee
+    //rendererFBO.render(sceneFBO, camera);
     controls.update
   }
   
