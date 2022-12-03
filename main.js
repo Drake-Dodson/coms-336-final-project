@@ -1,6 +1,7 @@
 // Initialization
 const scene = new THREE.Scene();
 const sceneFBO = new THREE.Scene();
+const loader = new THREE.TextureLoader();
 const size = 9000;
 
 const renderer = new THREE.WebGLRenderer({
@@ -74,12 +75,17 @@ function renderWater(sceneObj){
   const material = new THREE.MeshPhongMaterial({
     color: 0x0000ff,
     opacity: 0.3,
-    transparent: true
+    transparent: true,
+    normalMap: loader.load('images/water-normal-map.png')
   })
+  // material.normalMap.x = 15.8;
 
+  // material.normalScale.set(2, 2)
   water = new THREE.Mesh(geometry, material)
   water.rotation.x = toRadians(-90)
   water.position.set(0, 0, 0)
+  // var normalMap = new THREE.MeshBasicMaterial({map: loader.load('images/water-normal-map.png')})
+  // water.normalMap = loader.load('images/water-normal-map.png')
   sceneObj.add(water)
 }
 
