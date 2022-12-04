@@ -75,19 +75,19 @@ function renderWater(sceneObj){
   const geometry = new THREE.PlaneGeometry(size, size);
   const material = new THREE.MeshPhongMaterial({
     color: 0x0000ff,
-    opacity: 0.3,
+    opacity: 0.4,
     transparent: true,
     normalMap: loader.load('images/water-normal-map.png'),
     normalMapType: THREE.ObjectSpaceNormalMap,
   })
   // material.normalMap.x = 15.8;
-  const mapRepeats = 200; //the map texture is 512x512
+  const mapRepeats = 150; //the map texture is 512x512
   material.normalMap.wrapS = THREE.RepeatWrapping
   material.normalMap.wrapT = THREE.RepeatWrapping
   material.normalMap.repeat.x=mapRepeats
   material.normalMap.repeat.y=mapRepeats
+  material.normalScale.set(3, 3)
 
-  // material.normalScale.set(2, 2)
   water = new THREE.Mesh(geometry, material)
   water.rotation.x = toRadians(-90)
   water.position.set(0, 0, 0)
@@ -173,19 +173,17 @@ async function main(){
   var i = 0
   function animate() {
     requestAnimationFrame(animate);
-    //sun.position.set(camera.position.x + 1000, camera.position.y + 1000, camera.position.z + 1000);
-    //TODO: Update the water texture
-    // water.material.normalMap.x = i
-    // water.material.normalMap.offsetX=i
-    // water.material.normalMap.offsetY=i
     controls.update
+    //sun.position.set(camera.position.x + 1000, camera.position.y + 1000, camera.position.z + 1000);
+    water.material.normalMap.offset.x = i;
+    water.material.normalMap.offset.y = i;
 
     //this causes a lot of lag for me, so I'm commenting it out for now while I work on stuff
     //not sure what you'll do with it later, and how that will affect performance, but yee
     //rendererFBO.render(sceneFBO, camera);
 
     renderer.render(scene, camera);
-    i += 0.01;
+    i += 0.001;
   }
   
   animate();
