@@ -14,7 +14,13 @@ const rendererFBO = new THREE.WebGLRenderer({
   canvas: document.querySelector('#canvasFBO'),
 });
 
-
+//TODO: Textured sand
+//TODO: Reflections
+//TODO: Clouds
+//TODO: DUDV map
+//TODO: Fresnel effect
+//TODO: Soft edges
+//TODO: Projective texture mapping
 var fov = 75; 
 
 var fullscreen = false;
@@ -78,7 +84,7 @@ function renderWater(sceneObj){
     opacity: 0.4,
     transparent: true,
     normalMap: loader.load('images/water-normal-map.png'),
-    normalMapType: THREE.ObjectSpaceNormalMap,
+    // normalMapType: THREE.ObjectSpaceNormalMap,
   })
   // material.normalMap.x = 15.8;
   const mapRepeats = 150; //the map texture is 512x512
