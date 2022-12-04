@@ -2,7 +2,9 @@
 const scene = new THREE.Scene();
 const sceneFBO = new THREE.Scene();
 const loader = new THREE.TextureLoader();
-const size = 9000;
+const size = 3000;
+const skyboxSize = 4000;
+const sunRadius = 100;
 
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector('#canvas'),
@@ -42,8 +44,6 @@ var light;
 var sandyBottom;
 
 function loadSkyBox(sceneObj) {
-  const skyboxSize = 4000
-
   // const material = new THREE.ShaderMaterial({
   //   uniforms: {
   //     color: {
@@ -60,7 +60,7 @@ function loadSkyBox(sceneObj) {
     side: THREE.BackSide
   })
 
-  var skyboxGeometry = new THREE.SphereGeometry(skyboxSize, skyboxSize, skyboxSize);
+  var skyboxGeometry = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
   skybox = new THREE.Mesh(skyboxGeometry, material);
   sceneObj.add(skybox);
 }
@@ -72,7 +72,7 @@ function renderWater(sceneObj){
   //   fragmentShader: fWaterShader
   // })
 
-  const geometry = new THREE.CircleGeometry(100, 100);
+  const geometry = new THREE.PlaneGeometry(size, size);
   const material = new THREE.MeshPhongMaterial({
     color: 0x0000ff,
     opacity: 0.3,
@@ -81,6 +81,11 @@ function renderWater(sceneObj){
     normalMapType: THREE.ObjectSpaceNormalMap,
   })
   // material.normalMap.x = 15.8;
+  const mapRepeats = 200; //the map texture is 512x512
+  material.normalMap.wrapS = THREE.RepeatWrapping
+  material.normalMap.wrapT = THREE.RepeatWrapping
+  material.normalMap.repeat.x=mapRepeats
+  material.normalMap.repeat.y=mapRepeats
 
   // material.normalScale.set(2, 2)
   water = new THREE.Mesh(geometry, material)
@@ -90,14 +95,14 @@ function renderWater(sceneObj){
 }
 
 function renderSand(sceneObj){
-  const geometry = new THREE.CircleGeometry(100, 100);
+  const geometry = new THREE.PlaneGeometry(size, size);
   const material = new THREE.MeshPhongMaterial({
-    map: loader.load('images/sand.jpg')
+    color: 0xD8B863
   })
 
   sandyBottom = new THREE.Mesh(geometry, material)
   sandyBottom.rotation.x = toRadians(-90)
-  sandyBottom.position.set(0, -15, 0)
+  sandyBottom.position.set(0, -200, 0)
   sceneObj.add(sandyBottom)
 }
 
@@ -129,7 +134,7 @@ function renderCube(sceneObj){
 }
 
 function renderSun(sceneObj){
-  const geometry = new THREE.SphereGeometry(100, 100, 100);
+  const geometry = new THREE.SphereGeometry(sunRadius);
   const material = new THREE.MeshPhongMaterial({
     color: 0xfaf887,
   })
@@ -171,7 +176,8 @@ async function main(){
     //sun.position.set(camera.position.x + 1000, camera.position.y + 1000, camera.position.z + 1000);
     //TODO: Update the water texture
     // water.material.normalMap.x = i
-
+    // water.material.normalMap.offsetX=i
+    // water.material.normalMap.offsetY=i
     controls.update
 
     //this causes a lot of lag for me, so I'm commenting it out for now while I work on stuff
