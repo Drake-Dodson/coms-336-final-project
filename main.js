@@ -169,11 +169,17 @@ async function main(){
   function animate() {
     requestAnimationFrame(animate);
     //sun.position.set(camera.position.x + 1000, camera.position.y + 1000, camera.position.z + 1000);
-    renderer.render(scene, camera);
+    //TODO: Update the water texture
+    // water.material.normalMap.x = i
+
+    controls.update
+
     //this causes a lot of lag for me, so I'm commenting it out for now while I work on stuff
     //not sure what you'll do with it later, and how that will affect performance, but yee
     //rendererFBO.render(sceneFBO, camera);
-    controls.update
+
+    renderer.render(scene, camera);
+    i += 0.01;
   }
   
   animate();
