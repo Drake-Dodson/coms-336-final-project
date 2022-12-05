@@ -15,6 +15,7 @@ const fullscreen = false;
 
 /* --- Initialization --- */
 const imageLoader = new THREE.TextureLoader()
+const modelLoader = new THREE.OBJLoader()
 const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvas')});
 const rendererFBO = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvasFBO')});
 const height = fullscreen ? window.innerHeight : document.querySelector('#canvas').getAttribute('height')
@@ -126,6 +127,37 @@ async function renderIsland(sceenObj) {
   // let modelPath = 'models/lowpoly_island/scene.gltf';
   // let model = await loadOBJPromise(modelPath)
   // sceneObj.add(model.scene)
+  let islandTexture = imageLoader.load('models/lowpoly-island/textures/textureSurface_Color_2.jpg')
+  await modelLoader.load('models/lowpoly-island/island1_design2_c4d.obj',
+      // onLoad callback
+      function ( obj ) {
+        //object loaded, configure and add to scene
+        island = obj
+        scene.add(island)
+        island.scale.x = 0.5
+        island.scale.y = 0.5
+        island.scale.z = 0.5
+        island.position.x = -200
+        island.position.y = 10
+        island.position.z = -100
+
+        //have to find the child that is the mesh to load the texture onto it
+        island.traverse( function ( child ) {
+          if ( child instanceof THREE.Mesh )
+            child.material.map = islandTexture;
+        });
+      },
+
+      // onProgress callback
+      function ( xhr ) {
+        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+      },
+
+      // onError callback
+      function ( err ) {
+        console.error( err );
+      }
+  );
 }
 
 function renderCube(sceneObj){
