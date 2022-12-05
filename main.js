@@ -36,21 +36,21 @@ const controls = new OrbitControls(camera, renderer.domElement);
 let sun, skybox, water, light, bottom, island, cube;
 
 function loadSkyBox(sceneObj) {
-  // const material = new THREE.ShaderMaterial({
-  //   uniforms: {
-  //     color: {
-  //       value: new THREE.Vector3(0.66, 0.96,0.96)
-  //     }
-  //   },
-  //   vertexShader: vSkyboxShader,
-  //   fragmentShader: fSkyboxShader,
-  //   side: THREE.BackSide
-  // })
-
-  let material = new THREE.MeshBasicMaterial({
-    color: 0x0076f5,
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      color: {
+        value: new THREE.Vector3(0.00, 0.5,0.96)
+      }
+    },
+    vertexShader: vSkyboxShader,
+    fragmentShader: fSkyboxShader,
     side: THREE.BackSide
   })
+
+  // let material = new THREE.MeshBasicMaterial({
+  //   color: 0x0076f5,
+  //   side: THREE.BackSide
+  // })
   let geometry = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
 
   skybox = new THREE.Mesh(geometry, material);
@@ -121,11 +121,33 @@ function loadLights(lightPosition, sceneObj){
   //scene.add(lightHelper, gridHelper)
 }
 
-async function renderIsland(sceenObj) {
-  //Trying to add something more complicated to reflect
-  // let modelPath = 'models/lowpoly_island/scene.gltf';
-  // let model = await loadOBJPromise(modelPath)
-  // sceneObj.add(model.scene)
+async function renderIsland(sceneObj) {
+    var redCube = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshPhongMaterial({
+        color: 0x880000,
+      }))
+    
+    redCube.position.set(0, 0, 0)
+    sceneObj.add(redCube)
+  
+    var underwaterCube = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshPhongMaterial({
+        color: 0xe134eb,
+      }))
+    
+    underwaterCube.position.set(0, -10, 5)
+    sceneObj.add(underwaterCube)
+  
+    var island = new THREE.Mesh(
+      new THREE.SphereGeometry(5, 5, 5),
+      new THREE.MeshPhongMaterial({
+        color: 0x008800,
+      }))
+    
+    island.position.set(0, 4, 0)
+    sceneObj.add(island)
 }
 
 function renderCube(sceneObj){
@@ -146,7 +168,7 @@ function renderCube2(sceneObj){
       color: 0x880000,
     }))
 
-  cube.position.set(-10, -5, -10)
+  cube.position.set(-5, -5, -5)
   sceneObj.add(cube)
 }
 
@@ -168,11 +190,9 @@ async function main(){
   loadSkyBox(scene);
   renderWater(scene);
   renderSand(scene);
-  renderCube2(scene);
-  await renderIsland(scene);
+  renderIsland(scene);
 
   camera.position.set(10, 10, 10);
-  scene.fog = new THREE.Fog(0x8888ff, 1, 3000);
 
   let i = 0;
   function animate() {
@@ -191,7 +211,7 @@ async function main(){
     water.material.visible = false;
 
     //render reflection
-    renderer.clippingPlanes = [reflectionClipPlane]
+    //renderer.clippingPlanes = [reflectionClipPlane]
     renderer.setRenderTarget(reflectionTexture)
     renderer.render(scene, camera)
     //renders reflection to neighboring canvas
