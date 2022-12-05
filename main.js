@@ -1,7 +1,9 @@
 //TODO: Textured sand
+//TODO: Fun island
 //TODO: Clouds
 //TODO: DUDV map
 //TODO: Fresnel effect
+//TODO: Normal map (again)
 //TODO: Soft edges
 
 /* --- Configuration --- */
