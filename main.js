@@ -41,8 +41,8 @@ var aspectRatio = width / height;
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(width , height);
 rendererFBO.setSize(width , height);
-var reflectionTexture = new THREE.WebGLRenderTarget(width, height)
-var refractionTexture = new THREE.WebGLRenderTarget(width, height)
+var reflectionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
+var refractionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
 
 const camera = new THREE.PerspectiveCamera(fov, aspectRatio, 0.1, 10000);
 
@@ -78,28 +78,35 @@ function loadSkyBox(sceneObj) {
 
 function renderWater(sceneObj){
   // const geometry = new THREE.CircleGeometry(1000, 1000);
-  // const material = new THREE.ShaderMaterial({
-  //   vertexShader: vWaterShader,
-  //   fragmentShader: fWaterShader
-  // })
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      reflectionTexture: { value: reflectionTexture.texture },
+      refractionTexture: { value: refractionTexture.texture },
+    },
+    vertexShader: vWaterShader,
+    fragmentShader: fWaterShader
+  })
 
   const geometry = new THREE.PlaneGeometry(size, size);
-  const material = new THREE.MeshPhongMaterial({
-    color: 0x0000ff,
-    opacity: 0.4,
-    // map: reflectionTexture,
-    // alphaMap: refractionTexture,
-    combine: THREE.AddOperation,
-    transparent: true,
-    normalMap: loader.load('images/water-normal-map.png'),
-    // normalMapType: THREE.ObjectSpaceNormalMap,
-  })
-  const mapRepeats = 150; //the map texture is 512x512
-  material.normalMap.wrapS = THREE.RepeatWrapping
-  material.normalMap.wrapT = THREE.RepeatWrapping
-  material.normalMap.repeat.x=mapRepeats
-  material.normalMap.repeat.y=mapRepeats
-  material.normalScale.set(3, 3)
+  // const material = new THREE.MeshPhongMaterial({
+  //   color: 0x0000ff,
+  //   opacity: 0.4,
+  //   map: reflectionTexture.texture,
+  //   // envMap: reflectionTexture.texture,
+  //   // alphaMap: refractionTexture.texture,
+  //   combine: THREE.MixOperation,
+  //   transparent: true,
+  //   normalMap: loader.load('images/water-normal-map.png'),
+  //   // normalMapType: THREE.ObjectSpaceNormalMap,
+  // })
+  //TODO: Figure out why the normal map doesn't move on a rendered texture
+  //it also doesn't repeat like it's programmed to
+  // const mapRepeats = 150; //the map texture is 512x512
+  // material.normalMap.wrapS = THREE.RepeatWrapping
+  // material.normalMap.wrapT = THREE.RepeatWrapping
+  // material.normalMap.repeat.x=mapRepeats
+  // material.normalMap.repeat.y=mapRepeats
+  // material.normalScale.set(3, 3)
 
   water = new THREE.Mesh(geometry, material)
   water.rotation.x = toRadians(-90)
@@ -142,7 +149,7 @@ function renderCube(sceneObj){
       color: 0x880000,
     }))
 
-  cube.position.set(-5, 5, -5)
+  cube.position.set(-5, 1, -5)
   sceneObj.add(cube)
 }
 
@@ -161,12 +168,6 @@ async function main(){
   var lightPosition = new THREE.Vector3(-900, 200, -900);
 
   camera.position.set(10, 10, 10);
-
-  // Load FBO
-  // loadLights(lightPosition, sceneFBO);
-  // renderSun(sceneFBO);
-  // renderCube(sceneFBO);
-  // loadSkyBox(sceneFBO);
 
   // Load scene
   loadLights(lightPosition, scene);
@@ -188,35 +189,42 @@ async function main(){
 
   var i = 0
   function animate() {
-    requestAnimationFrame(animate);
     controls.update
-    //sun.position.set(camera.position.x + 1000, camera.position.y + 1000, camera.position.z + 1000);
-    water.material.normalMap.offset.x = i;
-    water.material.normalMap.offset.y = i;
 
-    //this causes a lot of lag for me, so I'm commenting it out for now while I work on stuff
-    //not sure what you'll do with it later, and how that will affect performance, but yee
-    let fboCam = camera.clone()
-    // fboCam.position.y = -camera.position.y;
+    //move normal map
+    i += 0.001;
+    // water.material.normalMap.offset.x = i;
+    // water.material.normalMap.offset.y = i;
+
+    //prep camera for reflection
+    let distance = 2 * (camera.position.y - water.position.y)
+    let angle = 2 * camera.rotation.x;
+    camera.position.y -= distance;
+    camera.rotateX(-angle);
     water.material.visible = false;
-    // rendererFBO.render(scene, fboCam);
 
+    //render reflection
     renderer.clippingPlanes = [reflectionPlane]
-    renderer.render(scene, fboCam, reflectionTexture)
+    renderer.setRenderTarget(reflectionTexture)
+    renderer.render(scene, camera)
 
+    //reset camera
+    camera.position.y += distance;
+    camera.rotateX(angle)
+
+    //render refraction
     renderer.clippingPlanes = [refractionPlane]
-    renderer.render(scene, fboCam, refractionTexture)
+    renderer.setRenderTarget(refractionTexture)
+    renderer.render(scene, camera)
 
-    //TODO: Figure out why applying these to the texture
-    //makes it invisible
-    //Kinda think we'll need to write custom shaders instead of just using three.js :(
-    // water.material.map = reflectionTexture.texture
-    // water.material.alphaMap = refractionTexture.texture
-
+    //render to the output thingy
+    water.material.needsUpdate = true
+    renderer.setRenderTarget(null)
     renderer.clippingPlanes = []
     water.material.visible = true;
     renderer.render(scene, camera);
-    i += 0.001;
+
+    requestAnimationFrame(animate);
   }
 
   animate();

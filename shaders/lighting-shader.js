@@ -1,16 +1,28 @@
-// vertex shader for lighting
+// vertex shader for water
 const vWaterShader = `
-
+varying vec4 clipSpace;
 void main() {
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  clipSpace = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  gl_Position = clipSpace;
 }
 `;
+//TODO: Figure out why it only does stripes
 
-// fragment shader for lighting
+// fragment shader for water
 const fWaterShader = `
-
-void main() {
-  gl_FragColor = vec4( 0.0, 0.0, 1.0, 1.0 );
+precision mediump float;
+uniform sampler2D reflectionTexture;
+uniform sampler2D refractionTexture;
+varying vec4 clipSpace;
+void main()
+{
+  vec2 ndc = (clipSpace.xy/clipSpace.w)/2.0 + 0.5;
+  vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
+  vec2 refractTexCoords = vec2(ndc.x, ndc.y);
+  //grab the colors from the reflection and refraction textures and mix them to get the color of the water
+  vec4 refColor = texture2D(reflectionTexture, reflectTexCoords);
+  vec4 fracColor = texture2D(refractionTexture, refractTexCoords);
+  gl_FragColor = mix(refColor, fracColor, 0.5);
 }
 `;
 
