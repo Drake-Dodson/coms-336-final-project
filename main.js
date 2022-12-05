@@ -123,10 +123,7 @@ function loadLights(lightPosition, sceneObj){
 }
 
 async function renderIsland(sceenObj) {
-  //Trying to add something more complicated to reflect
-  // let modelPath = 'models/lowpoly_island/scene.gltf';
-  // let model = await loadOBJPromise(modelPath)
-  // sceneObj.add(model.scene)
+  //"Lowpoly island" (https://skfb.ly/68SED) by alfance is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
   let islandTexture = imageLoader.load('models/lowpoly-island/textures/textureSurface_Color_2.jpg')
   await modelLoader.load('models/lowpoly-island/island1_design2_c4d.obj',
       // onLoad callback
