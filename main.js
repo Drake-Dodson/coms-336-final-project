@@ -8,7 +8,7 @@
 
 /* --- Configuration --- */
 const size = 3000;
-const skyboxSize = 4000;
+const skyboxSize = 8000;
 const sunRadius = 100;
 const fov = 75;
 const fullscreen = false;
@@ -139,6 +139,17 @@ function renderCube(sceneObj){
   sceneObj.add(cube)
 }
 
+function renderCube2(sceneObj){
+  cube = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshPhongMaterial({
+      color: 0x880000,
+    }))
+
+  cube.position.set(-10, -5, -10)
+  sceneObj.add(cube)
+}
+
 function renderSun(sceneObj){
   const geometry = new THREE.SphereGeometry(sunRadius);
   const material = new THREE.MeshPhongMaterial({
@@ -157,10 +168,11 @@ async function main(){
   loadSkyBox(scene);
   renderWater(scene);
   renderSand(scene);
+  renderCube2(scene);
   await renderIsland(scene);
 
   camera.position.set(10, 10, 10);
-  scene.fog = new THREE.Fog(0xffffff, 1000, 6000);
+  scene.fog = new THREE.Fog(0x8888ff, 1, 3000);
 
   let i = 0;
   function animate() {
