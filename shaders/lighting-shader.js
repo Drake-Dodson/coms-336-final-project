@@ -6,7 +6,6 @@ void main() {
   gl_Position = clipSpace;
 }
 `;
-//TODO: Figure out why it only does stripes
 
 // fragment shader for water
 const fWaterShader = `
@@ -17,7 +16,7 @@ varying vec4 clipSpace;
 void main()
 {
   vec2 ndc = (clipSpace.xy/clipSpace.w)/2.0 + 0.5;
-  vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
+  vec2 reflectTexCoords = vec2(ndc.x, ndc.y);
   vec2 refractTexCoords = vec2(ndc.x, ndc.y);
   //grab the colors from the reflection and refraction textures and mix them to get the color of the water
   vec4 refColor = texture2D(reflectionTexture, reflectTexCoords);

@@ -1,58 +1,37 @@
-// Initialization
-const scene = new THREE.Scene();
-const sceneFBO = new THREE.Scene();
-const loader = new THREE.TextureLoader();
-const size = 3000;
-const skyboxSize = 4000;
-const sunRadius = 100;
-
-const renderer = new THREE.WebGLRenderer({
-  canvas: document.querySelector('#canvas'),
-});
-const rendererFBO = new THREE.WebGLRenderer({
-  canvas: document.querySelector('#canvasFBO'),
-});
-
-// const rendererFBO = new THREE.WebGLRenderTarget(renderer.width, renderer.height);
-
 //TODO: Textured sand
-//TODO: Reflections
 //TODO: Clouds
 //TODO: DUDV map
 //TODO: Fresnel effect
 //TODO: Soft edges
-//TODO: Projective texture mapping
-var fov = 75;
 
-var fullscreen = false;
+/* --- Configuration --- */
+const size = 3000;
+const skyboxSize = 4000;
+const sunRadius = 100;
+const fov = 75;
+const fullscreen = false;
 
-
-if(fullscreen == true){
-  var height = window.innerHeight
-  var width = window.innerWidth
-
-}
-else{
-  var width = document.querySelector('#canvas').getAttribute('width');
-  var height = document.querySelector('#canvas').getAttribute('height')
-}
-
-var aspectRatio = width / height;
+/* --- Initialization --- */
+const imageLoader = new THREE.TextureLoader()
+const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvas')});
+const rendererFBO = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvasFBO')});
+const height = fullscreen ? window.innerHeight : document.querySelector('#canvas').getAttribute('height')
+const width  = fullscreen ? window.innerWidth  : document.querySelector('#canvas').getAttribute('width')
+const aspectRatio = width / height;
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(width , height);
 rendererFBO.setSize(width , height);
-var reflectionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
-var refractionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
+const reflectionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
+const refractionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
+const reflectionClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0))
+const refractionClipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0))
 
+/* --- Scene Objects --- */
+const scene = new THREE.Scene();
+const lightPosition = new THREE.Vector3(-900, 200, -900);
 const camera = new THREE.PerspectiveCamera(fov, aspectRatio, 0.1, 10000);
-
-
-// Scene Objects
-var sun;
-var skybox;
-var water;
-var light;
-var sandyBottom;
+const controls = new OrbitControls(camera, renderer.domElement);
+let sun, skybox, water, light, bottom, island, cube;
 
 function loadSkyBox(sceneObj) {
   // const material = new THREE.ShaderMaterial({
@@ -66,28 +45,17 @@ function loadSkyBox(sceneObj) {
   //   side: THREE.BackSide
   // })
 
-  const material = new THREE.MeshBasicMaterial({
+  let material = new THREE.MeshBasicMaterial({
     color: 0x0076f5,
     side: THREE.BackSide
   })
+  let geometry = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
 
-  var skyboxGeometry = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
-  skybox = new THREE.Mesh(skyboxGeometry, material);
+  skybox = new THREE.Mesh(geometry, material);
   sceneObj.add(skybox);
 }
 
 function renderWater(sceneObj){
-  // const geometry = new THREE.CircleGeometry(1000, 1000);
-  const material = new THREE.ShaderMaterial({
-    uniforms: {
-      reflectionTexture: { value: reflectionTexture.texture },
-      refractionTexture: { value: refractionTexture.texture },
-    },
-    vertexShader: vWaterShader,
-    fragmentShader: fWaterShader
-  })
-
-  const geometry = new THREE.PlaneGeometry(size, size);
   // const material = new THREE.MeshPhongMaterial({
   //   color: 0x0000ff,
   //   opacity: 0.4,
@@ -96,10 +64,9 @@ function renderWater(sceneObj){
   //   // alphaMap: refractionTexture.texture,
   //   combine: THREE.MixOperation,
   //   transparent: true,
-  //   normalMap: loader.load('images/water-normal-map.png'),
+  //   normalMap: imageLoader.load('images/water-normal-map.png'),
   //   // normalMapType: THREE.ObjectSpaceNormalMap,
   // })
-  //TODO: Figure out why the normal map doesn't move on a rendered texture
   //it also doesn't repeat like it's programmed to
   // const mapRepeats = 150; //the map texture is 512x512
   // material.normalMap.wrapS = THREE.RepeatWrapping
@@ -108,6 +75,16 @@ function renderWater(sceneObj){
   // material.normalMap.repeat.y=mapRepeats
   // material.normalScale.set(3, 3)
 
+  let material = new THREE.ShaderMaterial({
+    uniforms: {
+      reflectionTexture: { value: reflectionTexture.texture },
+      refractionTexture: { value: refractionTexture.texture },
+    },
+    vertexShader: vWaterShader,
+    fragmentShader: fWaterShader
+  })
+  let geometry = new THREE.PlaneGeometry(size, size)
+
   water = new THREE.Mesh(geometry, material)
   water.rotation.x = toRadians(-90)
   water.position.set(0, 0, 0)
@@ -115,15 +92,15 @@ function renderWater(sceneObj){
 }
 
 function renderSand(sceneObj){
-  const geometry = new THREE.PlaneGeometry(size, size);
-  const material = new THREE.MeshPhongMaterial({
+  let geometry = new THREE.PlaneGeometry(size, size);
+  let material = new THREE.MeshPhongMaterial({
     color: 0xD8B863
   })
 
-  sandyBottom = new THREE.Mesh(geometry, material)
-  sandyBottom.rotation.x = toRadians(-90)
-  sandyBottom.position.set(0, -200, 0)
-  sceneObj.add(sandyBottom)
+  bottom = new THREE.Mesh(geometry, material)
+  bottom.rotation.x = toRadians(-90)
+  bottom.position.set(0, -200, 0)
+  sceneObj.add(bottom)
 }
 
 
@@ -134,12 +111,19 @@ function loadLights(lightPosition, sceneObj){
   light.target.position.set(0, 0, 0);
   light.castShadow = true;
 
-  const ambientLight = new THREE.AmbientLight(0xffffff);
+  let ambientLight = new THREE.AmbientLight(0xffffff);
   sceneObj.add(light, ambientLight);
 
-  const lightHelper = new THREE.PointLightHelper(light)
+  // const lightHelper = new THREE.PointLightHelper(light)
   //const gridHelper = new THREE.GridHelper(200, 50);
   //scene.add(lightHelper, gridHelper)
+}
+
+async function renderIsland(sceenObj) {
+  //Trying to add something more complicated to reflect
+  // let modelPath = 'models/lowpoly_island/scene.gltf';
+  // let model = await loadOBJPromise(modelPath)
+  // sceneObj.add(model.scene)
 }
 
 function renderCube(sceneObj){
@@ -164,32 +148,21 @@ function renderSun(sceneObj){
 }
 
 async function main(){
-
-  var lightPosition = new THREE.Vector3(-900, 200, -900);
-
-  camera.position.set(10, 10, 10);
-
-  // Load scene
+  // Load objects into scene
   loadLights(lightPosition, scene);
   renderSun(scene);
   renderCube(scene);
   loadSkyBox(scene);
   renderWater(scene);
   renderSand(scene);
+  await renderIsland(scene);
 
-  const controls = new OrbitControls(camera, renderer.domElement);
-
+  camera.position.set(10, 10, 10);
   scene.fog = new THREE.Fog(0xffffff, 1000, 6000);
-  sceneFBO.fog = new THREE.Fog(0xffffff, 1000, 6000);
 
-  //clipping planes
-  let reflectionPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0))
-  let refractionPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0))
-  // refractionPlane.rotateX(180)
-
-  var i = 0
+  let i = 0;
   function animate() {
-    controls.update
+    controls.update()
 
     //move normal map
     i += 0.001;
@@ -204,32 +177,35 @@ async function main(){
     water.material.visible = false;
 
     //render reflection
-    renderer.clippingPlanes = [reflectionPlane]
+    renderer.clippingPlanes = [reflectionClipPlane]
     renderer.setRenderTarget(reflectionTexture)
     renderer.render(scene, camera)
+    //renders reflection to neighboring canvas
+    //TODO: Somethigns a little off here, not sure exactly what. Fix it though
+    rendererFBO.clippingPlanes = [reflectionClipPlane]
+    rendererFBO.render(scene, camera)
 
     //reset camera
     camera.position.y += distance;
     camera.rotateX(angle)
 
     //render refraction
-    renderer.clippingPlanes = [refractionPlane]
+    renderer.clippingPlanes = [refractionClipPlane]
     renderer.setRenderTarget(refractionTexture)
     renderer.render(scene, camera)
+    //renders refraction to neighboring canvas
+    // rendererFBO.clippingPlanes = [refractionClipPlane]
+    // rendererFBO.render(scene, camera)
 
     //render to the output thingy
     water.material.needsUpdate = true
     renderer.setRenderTarget(null)
     renderer.clippingPlanes = []
-    water.material.visible = true;
-    renderer.render(scene, camera);
+    water.material.visible = true
+    renderer.render(scene, camera)
 
     requestAnimationFrame(animate);
   }
 
   animate();
 }
-
-//use rendererFBO as a test for applying a rendered thing on a texture
-
-
