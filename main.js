@@ -1,5 +1,4 @@
 //TODO: Textured sand
-//TODO: Fun island
 //TODO: Clouds
 //TODO: DUDV map
 //TODO: Fresnel effect
@@ -12,18 +11,20 @@ const skyboxSize = 4000;
 const sunRadius = 100;
 const fov = 75;
 const fullscreen = false;
+const showReflection = true;
+const showRefraction = true;
 
 /* --- Initialization --- */
 const imageLoader = new THREE.TextureLoader()
 const modelLoader = new THREE.OBJLoader()
 const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvas')});
-const rendererFBO = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvasFBO')});
+const reflectionRenderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvasReflect')});
+const refractionRenderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvasRefract')});
 const height = fullscreen ? window.innerHeight : document.querySelector('#canvas').getAttribute('height')
 const width  = fullscreen ? window.innerWidth  : document.querySelector('#canvas').getAttribute('width')
 const aspectRatio = width / height;
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(width , height);
-rendererFBO.setSize(width , height);
 const reflectionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
 const refractionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
 const reflectionClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0))
@@ -201,6 +202,7 @@ async function main(){
     // water.material.normalMap.offset.y = i;
 
     //prep camera for reflection
+    //TODO: Camera position / angle seems to be a little off
     let distance = 2 * (camera.position.y - water.position.y)
     let angle = 2 * camera.rotation.x;
     camera.position.y -= distance;
@@ -212,9 +214,10 @@ async function main(){
     renderer.setRenderTarget(reflectionTexture)
     renderer.render(scene, camera)
     //renders reflection to neighboring canvas
-    //TODO: Somethigns a little off here, not sure exactly what. Fix it though
-    rendererFBO.clippingPlanes = [reflectionClipPlane]
-    rendererFBO.render(scene, camera)
+    if (showReflection){
+      reflectionRenderer.clippingPlanes = [reflectionClipPlane]
+      reflectionRenderer.render(scene, camera)
+    }
 
     //reset camera
     camera.position.y += distance;
@@ -225,8 +228,10 @@ async function main(){
     renderer.setRenderTarget(refractionTexture)
     renderer.render(scene, camera)
     //renders refraction to neighboring canvas
-    // rendererFBO.clippingPlanes = [refractionClipPlane]
-    // rendererFBO.render(scene, camera)
+    if (showRefraction){
+      refractionRenderer.clippingPlanes = [refractionClipPlane]
+      refractionRenderer.render(scene, camera)
+    }
 
     //render to the output thingy
     water.material.needsUpdate = true
