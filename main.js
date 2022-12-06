@@ -104,7 +104,6 @@ function renderWater(sceneObj){
       moveFactor: {value: moveFactor},
       normalMap: {value: imageLoader.load('images/water-normal-map.png')},
       cameraPos: {value: camera.position},
-      depthMap: {value: refractionTexture.depthTexture},
     },
     vertexShader: vWaterShader,
     fragmentShader: fWaterShader,
