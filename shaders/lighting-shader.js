@@ -16,7 +16,6 @@ varying vec4 clipSpace;
 const float tiling = 100.0;
 
 void main() {
-
   vec4 positionEye = modelViewMatrix * vec4(position, 1.0);
   vec4 lightEye = viewMatrix * lightPosition;
 
@@ -35,11 +34,13 @@ void main() {
 const fWaterShader = `
 precision mediump float;
 
+//textures and maps
 uniform sampler2D reflectionTexture;
 uniform sampler2D refractionTexture;
 uniform sampler2D dudvMap;
 uniform sampler2D normalMap;
-uniform mat3 materialProperties;
+
+//light properties
 uniform mat3 lightProperties;
 uniform float shininess;
 uniform float lightFocus;
@@ -47,6 +48,7 @@ uniform float reflectionFactor;
 uniform float moveFactor;
 uniform vec3 fD;
 
+//varying properties
 varying vec3 fL;
 varying vec3 fN;
 varying vec3 fV;
@@ -54,9 +56,10 @@ varying vec3 toCameraVector;
 varying vec2 textureCoords;
 varying vec4 clipSpace;
 
+//consts
 const float waveStrength = 0.02;
-void main()
-{
+
+void main() {
 //reflection and refraction tex coords
   vec2 ndc = (clipSpace.xy/clipSpace.w)/2.0 + 0.5;
   vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
@@ -96,35 +99,20 @@ void main()
   vec3 L = normalize(fL);
   vec3 V = normalize(fV);
   vec3 R = reflect(-L, N);
-  
-  vec4 ambientSurface = vec4(materialProperties[0], 1.0);
-  vec4 diffuseSurface = vec4(materialProperties[1], 1.0);
-  vec4 specularSurface = vec4(materialProperties[2], 1.0);
 
   vec4 ambientLight = vec4(lightProperties[0], 1.0);
   vec4 diffuseLight = vec4(lightProperties[1], 1.0);
   vec4 specularLight = vec4(lightProperties[2], 1.0);
 
-  float m = waterSurface.a;
-  ambientSurface = (1.0 - m) * ambientSurface + m * waterSurface;
-  diffuseSurface = (1.0 - m) * diffuseSurface + m * waterSurface;
-  specularSurface = (1.0 - m) * specularSurface + m * waterSurface;
-
   float diffuseFactor = max(0.0, dot(L, N));
   float specularFactor = pow(max(0.0, dot(V, R)), shininess);
 
-  vec4 ambient = ambientLight * ambientSurface;
-  vec4 diffuse = diffuseFactor * diffuseLight * diffuseSurface;
-  vec4 specular = specularFactor * specularLight * specularSurface;
+  vec4 ambient = ambientLight * waterSurface;
+  vec4 diffuse = diffuseFactor * diffuseLight * waterSurface;
+  vec4 specular = specularFactor * specularLight * waterSurface;
   
   gl_FragColor = ambient + diffuse + specular;
   gl_FragColor.a = 1.0;
-  
-  // gl_FragColor = waterSurface;
-  //gl_FragColor.a = clamp(waterDepth / 5.0, 0.0, 1.0);
- // gl_FragColor.a = waterDepth + 100.0;
- // gl_FragColor = vec4(waterDepth/50.0);
-   
 }
 `;
 
