@@ -85,9 +85,9 @@ function renderWater(sceneObj){
       shininess: { value: shininess},
       lightFocus: {value: lightFocus},
       fD: {value: new THREE.Vector3(direction.x, direction.y, direction.z)},
-      dudvMap: {value: imageLoader.load('images/dudv-map.png')},
+      dudvMap: {value: imageLoader.load('images/dudv-map2.png')},
       moveFactor: {value: moveFactor},
-      normalMap: {value: imageLoader.load('images/water-normal-map.png')},
+      normalMap: {value: imageLoader.load('images/water-normal-map2.png')},
       cameraPos: {value: camera.position},
       // reflectionFactor: {value: 1.0}, for some reason doesn't work if set here :(
       depthMap: {value: refractionTexture.depthTexture},
@@ -100,8 +100,8 @@ function renderWater(sceneObj){
   })
 
   //make the textures wrap
-  reflectionTexture.texture.wrapS = THREE.RepeatWrapping
-  reflectionTexture.texture.wrapT = THREE.RepeatWrapping
+  reflectionTexture.texture.wrapS = THREE.RepeatWrapping;
+  reflectionTexture.texture.wrapT = THREE.RepeatWrapping;
   if(showNormalMap){
     material.uniforms.normalMap.value.wrapS = THREE.RepeatWrapping;
     material.uniforms.normalMap.value.wrapT = THREE.RepeatWrapping;
@@ -156,7 +156,7 @@ async function renderIsland(sceenObj) {
         island.scale.y = 0.5
         island.scale.z = 0.5
         island.position.x = 0
-        island.position.y = 0
+        island.position.y = 5
         island.position.z = 0
 
         //have to find the child that is the mesh to load the texture onto it
