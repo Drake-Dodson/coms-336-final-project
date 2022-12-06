@@ -8,9 +8,10 @@ const size = 3000;
 const skyboxSize = 8000;
 const sunRadius = 100;
 const fov = 75;
-const fullscreen = false;
-const showReflection = true;
-const showRefraction = true;
+const fullscreen = true;
+const showReflection = false;
+const showRefraction = false;
+const showNormalMap = false; 
 
 /* --- Initialization --- */
 const imageLoader = new THREE.TextureLoader()
@@ -35,7 +36,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 let sun, skybox, water, light, bottom, island, cube;
 
 /* --- Lighting Objects --- */
-const lightPosition = new THREE.Vector4(0, 100, 0, 1.0);
+const lightPosition = new THREE.Vector4(-900, 300, -900, 1.0);
 var lightPropElements = new Float32Array([
   0.7, 0.7, 0.7,
   0.2, 0.7, 0.7,
@@ -91,6 +92,12 @@ function renderWater(sceneObj){
     fragmentShader: fWaterShader
   })
 
+
+  if(showNormalMap){
+    material.uniforms.normalMap.value.wrapS = THREE.RepeatWrapping;
+    material.uniforms.normalMap.value.wrapT = THREE.RepeatWrapping;
+  }
+  
   material.uniforms.dudvMap.value.wrapS = THREE.RepeatWrapping;
   material.uniforms.dudvMap.value.wrapT = THREE.RepeatWrapping;
 
@@ -114,7 +121,6 @@ function renderSand(sceneObj){
   sceneObj.add(bottom)
 }
 
-
 function loadLights(lightPosition, sceneObj){
   light = new THREE.DirectionalLight(0xffffff, 1);
   light.position.set(lightPosition.x, lightPosition.y, lightPosition.z);
@@ -125,9 +131,9 @@ function loadLights(lightPosition, sceneObj){
   let ambientLight = new THREE.AmbientLight(0xffffff);
   sceneObj.add(light, ambientLight);
 
-  const lightHelper = new THREE.PointLightHelper(light)
+  //const lightHelper = new THREE.PointLightHelper(light)
   const gridHelper = new THREE.GridHelper(200, 50);
-  scene.add(lightHelper)
+  //scene.add(lightHelper)
 }
 
 async function renderIsland(sceenObj) {
@@ -165,35 +171,6 @@ async function renderIsland(sceenObj) {
   );
 }
 
-async function renderIsland2(sceneObj) {
-  var redCube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshPhongMaterial({
-      color: 0x880000,
-    }))
-  
-  redCube.position.set(0, 10, 0)
-  sceneObj.add(redCube)
-
-  var underwaterCube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshPhongMaterial({
-      color: 0xe134eb,
-    }))
-  
-  underwaterCube.position.set(0, -10, 5)
-  sceneObj.add(underwaterCube)
-
-  var island = new THREE.Mesh(
-    new THREE.SphereGeometry(5, 5, 5),
-    new THREE.MeshPhongMaterial({
-      color: 0x008800,
-    }))
-  
-  island.position.set(0, 4, 0)
-  sceneObj.add(island)
-}
-
 function renderCube(sceneObj){
   cube = new THREE.Mesh(
     new THREE.BoxGeometry(1, 1, 1),
@@ -202,17 +179,6 @@ function renderCube(sceneObj){
     }))
 
   cube.position.set(-5, 1, -5)
-  sceneObj.add(cube)
-}
-
-function renderCube2(sceneObj){
-  cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshPhongMaterial({
-      color: 0x880000,
-    }))
-
-  cube.position.set(-5, -5, -5)
   sceneObj.add(cube)
 }
 
@@ -230,7 +196,7 @@ async function main(){
   // Load objects into scene
   loadLights(lightPosition, scene);
   renderSun(scene);
-  renderCube(scene);
+  //renderCube(scene);
   loadSkyBox(scene);
   renderWater(scene);
   //renderSand(scene);
@@ -245,14 +211,12 @@ async function main(){
 
     //move normal map
     i += 0.001;
-    // water.material.normalMap.offset.x = i;
-    // water.material.normalMap.offset.y = i;
 
     if(moveFactor > 0.2){
-      waveSpeedIterator = -waveSpeed;
+      waveSpeedIterator = -waveSpeedIterator;
     }
-    if(moveFactor < 0){
-      waveSpeedIterator = waveSpeed;
+    if(moveFactor < 0.2){
+      waveSpeedIterator = waveSpeedIterator;
     }
     moveFactor += waveSpeedIterator;
     water.material.uniforms.moveFactor.value = moveFactor;
@@ -269,6 +233,7 @@ async function main(){
     renderer.clippingPlanes = [reflectionClipPlane]
     renderer.setRenderTarget(reflectionTexture)
     renderer.render(scene, camera)
+
     //renders reflection to neighboring canvas
     if (showReflection){
       reflectionRenderer.clippingPlanes = [reflectionClipPlane]

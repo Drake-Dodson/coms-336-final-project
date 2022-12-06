@@ -96,7 +96,7 @@ void main()
   vec4 waterSurface = mix(refColor, fracColor, 0.5);
 
   //increases the green value of the surface 
-  // waterSurface = vec4(waterSurface.x, waterSurface.y, waterSurface.z + 0.05,  1.0);
+  waterSurface = vec4(waterSurface.x, waterSurface.y + 0.10, waterSurface.z,  1.0);
 
   vec4 ambientSurface = vec4(materialProperties[0], 1.0);
   vec4 diffuseSurface = vec4(materialProperties[1], 1.0);
