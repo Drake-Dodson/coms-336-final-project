@@ -178,8 +178,44 @@ function renderCube(sceneObj){
       color: 0x880000,
     }))
 
-  cube.position.set(-5, 1, -5)
+  cube.position.set(-5, -5, -5)
   sceneObj.add(cube)
+
+  cube2 = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshPhongMaterial({
+      color: 0x886800,
+    }))
+
+  cube2.position.set(-15, 5, -5)
+  sceneObj.add(cube2)
+  
+  cube2 = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshPhongMaterial({
+      color: 0x886800,
+    }))
+
+  cube2.position.set(-15, 5, -5)
+  sceneObj.add(cube2)
+
+  cube2 = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshPhongMaterial({
+      color: 0x886800,
+    }))
+
+  cube2.position.set(-15, 5, -5)
+  sceneObj.add(cube2)
+  
+  cube3 = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshPhongMaterial({
+      color: 0x008800,
+    }))
+
+  cube3.position.set(0, 0, -15)
+  sceneObj.add(cube3)
 }
 
 function renderSun(sceneObj){
@@ -196,7 +232,7 @@ async function main(){
   // Load objects into scene
   loadLights(lightPosition, scene);
   renderSun(scene);
-  //renderCube(scene);
+  renderCube(scene);
   loadSkyBox(scene);
   renderWater(scene);
   //renderSand(scene);
