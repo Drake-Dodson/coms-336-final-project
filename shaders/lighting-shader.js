@@ -68,7 +68,7 @@ void main()
 {
 
   vec2 ndc = (clipSpace.xy/clipSpace.w)/2.0 + 0.5;
-  vec2 reflectTexCoords = vec2(ndc.x, 1.0-ndc.y);
+  vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
   vec2 refractTexCoords = vec2(ndc.x, ndc.y);
 
   vec2 distortedTexCoords = texture(dudvMap, vec2(textureCoords.x + moveFactor, textureCoords.y)).rg*0.1;
@@ -79,8 +79,8 @@ void main()
   refractTexCoords = clamp(refractTexCoords, 0.001, 0.999);
   
   reflectTexCoords += totalDistortion;
-  // reflectTexCoords.x = clamp(refractTexCoords.x, 0.001, 0.999);
-  // reflectTexCoords.y = clamp(refractTexCoords.y, -0.999, -0.001);
+  reflectTexCoords.x = clamp(reflectTexCoords.x, 0.001, 0.999);
+  reflectTexCoords.y = clamp(reflectTexCoords.y, -0.999, -0.001);
   
 
 

@@ -75,6 +75,9 @@ function loadSkyBox(sceneObj) {
 function renderWater(sceneObj){
   direction = new THREE.Vector4(0, -0, 0, 0);
   direction = direction.applyMatrix4(camera.matrixWorldInverse);
+  //make the reflection texture wrap
+  reflectionTexture.texture.wrapS = THREE.RepeatWrapping
+  reflectionTexture.texture.wrapT = THREE.RepeatWrapping
   let material = new THREE.ShaderMaterial({
     uniforms: {
       reflectionTexture: { value: reflectionTexture.texture },
