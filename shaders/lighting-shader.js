@@ -25,7 +25,6 @@ void main() {
   fV = normalize(-(position).xyz);
   
   toCameraVector = cameraPos - positionEye.xyz;
-
   clipSpace = projectionMatrix * positionEye;
   gl_Position = clipSpace;
   textureCoords = vec2(uv.x/2.0 * 0.5, uv.y / 2.0 * 0.5)  * tiling;
@@ -71,14 +70,14 @@ void main()
   float far = 10000.0;
   float near = 0.1;
   float floorDistance = 2.0 * near * far / (far + near - (2.0 * depth - 1.0) * (far - near));
-  depth = gl_FragCoord.z;
+  depth = -gl_FragCoord.z;
   float waterDistance = 2.0 * near * far / (far + near - (2.0 * depth - 1.0) * (far - near));
   float waterDepth = floorDistance - waterDistance;
 
 //dudv distortion
   vec2 distortedTexCoords = texture(dudvMap, vec2(textureCoords.x + moveFactor, textureCoords.y)).rg*0.1;
-	distortedTexCoords = textureCoords + vec2(distortedTexCoords.x, distortedTexCoords.y+moveFactor);
-	vec2 totalDistortion = (texture(dudvMap, distortedTexCoords).rg * 2.0 - 1.0) * waveStrength;
+  distortedTexCoords = textureCoords + vec2(distortedTexCoords.x, distortedTexCoords.y+moveFactor);
+  vec2 totalDistortion = (texture(dudvMap, distortedTexCoords).rg * 2.0 - 1.0) * waveStrength;
 
   refractTexCoords += totalDistortion;
   refractTexCoords = clamp(refractTexCoords, 0.001, 0.999);
@@ -90,12 +89,8 @@ void main()
 //normal map
   vec4 normalMapColor = texture(normalMap, distortedTexCoords);
   vec3 normal = vec3(normalMapColor.r, normalMapColor.b, normalMapColor.g);
-
   vec3 N = normalize(normal);
-  vec3 L = normalize(fL);
-  vec3 V = normalize(fV);
-  vec3 R = reflect(-L, N);
-  
+
 //fresnel effect
   vec3 viewVector = normalize(toCameraVector);
   float refractiveFactor = dot(viewVector, vec3(0.0, 1.0, 0.0));
@@ -106,10 +101,14 @@ void main()
   vec4 fracColor = texture2D(refractionTexture, refractTexCoords);
   vec4 waterSurface = mix(refColor, fracColor, refractiveFactor);
 
-  //increases the green value of the surface to give distinction between sky and water
- // waterSurface = vec4(waterSurface.x, waterSurface.y + 0.10, waterSurface.z,  1.0);
+//increases the green value of the surface to give distinction between sky and water
+  waterSurface = vec4(waterSurface.x, waterSurface.y + 0.10, waterSurface.z,  1.0);
 
 //basic lighting
+  vec3 L = normalize(fL);
+  vec3 V = normalize(fV);
+  vec3 R = reflect(-L, N);
+  
   vec4 ambientSurface = vec4(materialProperties[0], 1.0);
   vec4 diffuseSurface = vec4(materialProperties[1], 1.0);
   vec4 specularSurface = vec4(materialProperties[2], 1.0);
@@ -124,7 +123,6 @@ void main()
   specularSurface = (1.0 - m) * specularSurface + m * waterSurface;
 
   float diffuseFactor = max(0.0, dot(L, N));
-
   float specularFactor = pow(max(0.0, dot(V, R)), shininess);
 
   vec4 ambient = ambientLight * ambientSurface;
@@ -132,8 +130,13 @@ void main()
   vec4 specular = specularFactor * specularLight * specularSurface;
   
   gl_FragColor = ambient + diffuse + specular;
+  gl_FragColor.a = 1.0;
+  
   // gl_FragColor = waterSurface;
-  // gl_FragColor.a = clamp(waterDepth / 20.0, 0.0, 1.0);
+  //gl_FragColor.a = clamp(waterDepth / 5.0, 0.0, 1.0);
+ // gl_FragColor.a = waterDepth + 100.0;
+ // gl_FragColor = vec4(waterDepth/50.0);
+   
 }
 `;
 

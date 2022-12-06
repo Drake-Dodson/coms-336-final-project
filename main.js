@@ -75,9 +75,7 @@ function loadSkyBox(sceneObj) {
 function renderWater(sceneObj){
   direction = new THREE.Vector4(0, -0, 0, 0);
   direction = direction.applyMatrix4(camera.matrixWorldInverse);
-  //make the reflection texture wrap
-  reflectionTexture.texture.wrapS = THREE.RepeatWrapping
-  reflectionTexture.texture.wrapT = THREE.RepeatWrapping
+
   let material = new THREE.ShaderMaterial({
     uniforms: {
       reflectionTexture: { value: reflectionTexture.texture },
@@ -97,20 +95,21 @@ function renderWater(sceneObj){
       farPlane: {value: far},
     },
     vertexShader: vWaterShader,
-    fragmentShader: fWaterShader
+    fragmentShader: fWaterShader,
+    transparent: true,
   })
 
-
+  //make the textures wrap
+  reflectionTexture.texture.wrapS = THREE.RepeatWrapping
+  reflectionTexture.texture.wrapT = THREE.RepeatWrapping
   if(showNormalMap){
     material.uniforms.normalMap.value.wrapS = THREE.RepeatWrapping;
     material.uniforms.normalMap.value.wrapT = THREE.RepeatWrapping;
   }
-  
   material.uniforms.dudvMap.value.wrapS = THREE.RepeatWrapping;
   material.uniforms.dudvMap.value.wrapT = THREE.RepeatWrapping;
 
   let geometry = new THREE.PlaneGeometry(size, size)
-
   water = new THREE.Mesh(geometry, material)
   water.rotation.x = toRadians(-90)
   water.position.set(0, 0, 0)
@@ -152,7 +151,7 @@ async function renderIsland(sceenObj) {
       function ( obj ) {
         //object loaded, configure and add to scene
         island = obj
-        scene.add(island)
+        sceenObj.add(island)
         island.scale.x = 0.5
         island.scale.y = 0.5
         island.scale.z = 0.5
@@ -181,49 +180,49 @@ async function renderIsland(sceenObj) {
 
 function renderCube(sceneObj){
   cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.BoxGeometry(8, 8, 8),
     new THREE.MeshPhongMaterial({
       color: 0x880000,
     }))
 
-  cube.position.set(-5, -5, -5)
+  cube.position.set(90, -5, -25)
   sceneObj.add(cube)
 
   cube2 = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.BoxGeometry(20, 20, 20),
     new THREE.MeshPhongMaterial({
       color: 0x886800,
     }))
 
-  cube2.position.set(-15, 5, -5)
-  sceneObj.add(cube2)
-  
-  cube2 = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshPhongMaterial({
-      color: 0x886800,
-    }))
-
-  cube2.position.set(-15, 5, -5)
-  sceneObj.add(cube2)
-
-  cube2 = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshPhongMaterial({
-      color: 0x886800,
-    }))
-
-  cube2.position.set(-15, 5, -5)
+  cube2.position.set(0, 25, -90)
   sceneObj.add(cube2)
   
   cube3 = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.BoxGeometry(15, 15, 15),
+    new THREE.MeshPhongMaterial({
+      color: 0x8868f0,
+    }))
+
+  cube3.position.set(-100, 5, -5)
+  sceneObj.add(cube3)
+
+  cube4 = new THREE.Mesh(
+    new THREE.BoxGeometry(200, 400, 200),
+    new THREE.MeshPhongMaterial({
+      color: 0x00f0fe,
+    }))
+
+  cube4.position.set(-400, -100, -100)
+  sceneObj.add(cube4)
+  
+  cube5 = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 8, 8),
     new THREE.MeshPhongMaterial({
       color: 0x008800,
     }))
 
-  cube3.position.set(0, 0, -15)
-  sceneObj.add(cube3)
+  cube5.position.set(0, 0, -200)
+  sceneObj.add(cube5)
 }
 
 function renderSun(sceneObj){
@@ -243,10 +242,10 @@ async function main(){
   renderCube(scene);
   loadSkyBox(scene);
   renderWater(scene);
-  renderSand(scene);
+  // renderSand(scene);
   await renderIsland(scene);
 
-  camera.position.set(10, 10, 10);
+  camera.position.set(75, 75, 75);
 
   let i = 0;
   var waveSpeedIterator = waveSpeed;
