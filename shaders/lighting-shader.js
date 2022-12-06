@@ -40,8 +40,6 @@ uniform sampler2D refractionTexture;
 uniform sampler2D dudvMap;
 uniform sampler2D normalMap;
 uniform sampler2D depthMap;
-uniform float nearPlane;
-uniform float farPlane;
 uniform mat3 materialProperties;
 uniform mat3 lightProperties;
 uniform float shininess;

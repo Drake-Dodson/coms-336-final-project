@@ -4,19 +4,18 @@
 //TODO: Soft edges
 
 /* --- Configuration --- */
-const size = 3000;
+const oceanSize = 3000;
 const skyboxSize = 8000;
-const sunRadius = 100;
 const fov = 75;
 const fullscreen = true;
+// If we should render the reflection and refraction to their seperate canvases or not
 const showReflection = false;
 const showRefraction = false;
-const showNormalMap = true;
+// To render or not render certain things to the scene
 const showSand = false;
 const showCubes = false;
 const showIsland = true;
-const far = 10000;
-const near = 0.1;
+const showSun = true;
 
 /* --- Initialization --- */
 const imageLoader = new THREE.TextureLoader()
@@ -24,19 +23,22 @@ const modelLoader = new THREE.OBJLoader()
 const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvas')});
 const reflectionRenderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvasReflect')});
 const refractionRenderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#canvasRefract')});
+// Renderer dimensions
 const height = fullscreen ? window.innerHeight : document.querySelector('#canvas').getAttribute('height')
 const width  = fullscreen ? window.innerWidth  : document.querySelector('#canvas').getAttribute('width')
 const aspectRatio = width / height;
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(width , height);
+// FBO Render Targets
 const reflectionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
 const refractionTexture = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat })
+// Clipping planes
 const reflectionClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0))
 const refractionClipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0))
 
 /* --- Scene Objects --- */
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(fov, aspectRatio, near, far);
+const camera = new THREE.PerspectiveCamera(fov, aspectRatio, 0.1, 10000);
 const controls = new OrbitControls(camera, renderer.domElement);
 let sun, skybox, water, light, bottom, island, cube, cube2, cube3, cube4, cube5;
 
@@ -54,8 +56,20 @@ const lightFocus = 100;
 const waveSpeed = 0.0002;
 let moveFactor = 0;
 
+/* --- Light Rendering --- */
+function loadLights(lightPosition, sceneObj){
+  light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(lightPosition.x, lightPosition.y, lightPosition.z);
+  //https://www.youtube.com/watch?v=PPwR7h5SnOE
+  light.target.position.set(0, 0, 0);
+  light.castShadow = true;
+
+  let ambientLight = new THREE.AmbientLight(0xffffff);
+  sceneObj.add(light, ambientLight);
+}
+
 /* --- Render Functions --- */
-function loadSkyBox(sceneObj) {
+function renderSkyBox(sceneObj) {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       color: {
@@ -73,7 +87,8 @@ function loadSkyBox(sceneObj) {
 }
 
 function renderWater(sceneObj){
-  direction = new THREE.Vector4(0, -0, 0, 0);
+  // The direction the camera is facing
+  let direction = new THREE.Vector4(0, -0, 0, 0);
   direction = direction.applyMatrix4(camera.matrixWorldInverse);
 
   let material = new THREE.ShaderMaterial({
@@ -85,13 +100,11 @@ function renderWater(sceneObj){
       shininess: { value: shininess},
       lightFocus: {value: lightFocus},
       fD: {value: new THREE.Vector3(direction.x, direction.y, direction.z)},
-      dudvMap: {value: imageLoader.load('images/dudv-map2.png')},
+      dudvMap: {value: imageLoader.load('images/dudv-map.png')},
       moveFactor: {value: moveFactor},
-      normalMap: {value: imageLoader.load('images/water-normal-map2.png')},
+      normalMap: {value: imageLoader.load('images/water-normal-map.png')},
       cameraPos: {value: camera.position},
       depthMap: {value: refractionTexture.depthTexture},
-      nearPlane: {value: near},
-      farPlane: {value: far},
     },
     vertexShader: vWaterShader,
     fragmentShader: fWaterShader,
@@ -101,76 +114,16 @@ function renderWater(sceneObj){
   //make the textures and maps wrap
   reflectionTexture.texture.wrapS = THREE.RepeatWrapping;
   reflectionTexture.texture.wrapT = THREE.RepeatWrapping;
-  if(showNormalMap){
-    material.uniforms.normalMap.value.wrapS = THREE.RepeatWrapping;
-    material.uniforms.normalMap.value.wrapT = THREE.RepeatWrapping;
-  }
+  material.uniforms.normalMap.value.wrapS = THREE.RepeatWrapping;
+  material.uniforms.normalMap.value.wrapT = THREE.RepeatWrapping;
   material.uniforms.dudvMap.value.wrapS = THREE.RepeatWrapping;
   material.uniforms.dudvMap.value.wrapT = THREE.RepeatWrapping;
 
-  let geometry = new THREE.PlaneGeometry(size, size)
+  let geometry = new THREE.PlaneGeometry(oceanSize, oceanSize)
   water = new THREE.Mesh(geometry, material)
   water.rotation.x = toRadians(-90)
   water.position.set(0, 0, 0)
   sceneObj.add(water)
-}
-
-function renderSand(sceneObj){
-  let geometry = new THREE.PlaneGeometry(size, size);
-  let material = new THREE.MeshPhongMaterial({
-    color: 0xD8B863
-  })
-
-  bottom = new THREE.Mesh(geometry, material)
-  bottom.rotation.x = toRadians(-90)
-  bottom.position.set(0, -200, 0)
-  sceneObj.add(bottom)
-}
-
-function loadLights(lightPosition, sceneObj){
-  light = new THREE.DirectionalLight(0xffffff, 1);
-  light.position.set(lightPosition.x, lightPosition.y, lightPosition.z);
-  //https://www.youtube.com/watch?v=PPwR7h5SnOE
-  light.target.position.set(0, 0, 0);
-  light.castShadow = true;
-
-  let ambientLight = new THREE.AmbientLight(0xffffff);
-  sceneObj.add(light, ambientLight);
-}
-
-async function renderIsland(sceenObj) {
-  //"Lowpoly island" (https://skfb.ly/68SED) by alfance is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
-  let islandTexture = imageLoader.load('models/lowpoly-island/textures/textureSurface_Color_2.jpg')
-  await modelLoader.load('models/lowpoly-island/island1_design2_c4d.obj',
-      // onLoad callback
-      function ( obj ) {
-        //object loaded, configure and add to scene
-        island = obj
-        sceenObj.add(island)
-        island.scale.x = 0.5
-        island.scale.y = 0.5
-        island.scale.z = 0.5
-        island.position.x = 0
-        island.position.y = 5
-        island.position.z = 0
-
-        //have to find the child that is the mesh to load the texture onto it
-        island.traverse( function ( child ) {
-          if ( child instanceof THREE.Mesh )
-            child.material.map = islandTexture;
-        });
-      },
-
-      // onProgress callback
-      function ( xhr ) {
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-      },
-
-      // onError callback
-      function ( err ) {
-        console.error( err );
-      }
-  );
 }
 
 function renderCubes(sceneObj){
@@ -220,8 +173,20 @@ function renderCubes(sceneObj){
   sceneObj.add(cube5)
 }
 
+function renderSand(sceneObj){
+  let geometry = new THREE.PlaneGeometry(oceanSize, oceanSize);
+  let material = new THREE.MeshPhongMaterial({
+    color: 0xD8B863
+  })
+
+  bottom = new THREE.Mesh(geometry, material)
+  bottom.rotation.x = toRadians(-90)
+  bottom.position.set(0, -200, 0)
+  sceneObj.add(bottom)
+}
+
 function renderSun(sceneObj){
-  const geometry = new THREE.SphereGeometry(sunRadius);
+  const geometry = new THREE.SphereGeometry(100);
   const material = new THREE.MeshPhongMaterial({
     color: 0xfaf887,
   })
@@ -230,35 +195,62 @@ function renderSun(sceneObj){
   sceneObj.add(sun)
 }
 
+async function renderIsland(sceenObj) {
+  //"Lowpoly island" (https://skfb.ly/68SED) by alfance is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+  let islandTexture = imageLoader.load('models/lowpoly-island/textures/textureSurface_Color_2.jpg')
+  await modelLoader.load('models/lowpoly-island/island1_design2_c4d.obj',
+      // onLoad callback
+      function ( obj ) {
+        // object loaded, configure and add to scene
+        island = obj
+        sceenObj.add(island)
+        island.scale.x = 0.5
+        island.scale.y = 0.5
+        island.scale.z = 0.5
+        island.position.x = 0
+        island.position.y = 5
+        island.position.z = 0
+
+        //have to find the child that is the mesh to load the texture onto it
+        island.traverse( function ( child ) {
+          if ( child instanceof THREE.Mesh )
+            child.material.map = islandTexture;
+        });
+      },
+
+      // onProgress callback
+      function ( xhr ) {
+        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+      },
+
+      // onError callback
+      function ( err ) {
+        console.error( err );
+      }
+  );
+}
+
 /* --- Main Animation ---*/
 async function main(){
   // Load objects into scene
   loadLights(lightPosition, scene);
-  renderSun(scene);
-  loadSkyBox(scene);
+  renderSkyBox(scene);
   renderWater(scene);
   // Optional renders
   if (showCubes) { renderCubes(scene); }
   if (showSand) { renderSand(scene); }
+  if (showSun) { renderSun(scene); }
   if (showIsland) { await renderIsland(scene); }
 
+  // Set initial camera position
   camera.position.set(75, 75, 75);
 
-  let i = 0;
-  var waveSpeedIterator = waveSpeed;
+  // What gets done every time the GPU makes a new frame
   function animate() {
     controls.update()
 
-    //move normal map
-    i += 0.001;
     //move DuDv map
-    if(moveFactor > 0.2){
-      waveSpeedIterator = -waveSpeedIterator;
-    }
-    if(moveFactor > 0){
-      waveSpeedIterator = -waveSpeedIterator;
-    }
-    moveFactor += waveSpeedIterator;
+    moveFactor -= waveSpeed;
     water.material.uniforms.moveFactor.value = moveFactor;
 
     //prep camera for reflection
