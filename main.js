@@ -89,7 +89,6 @@ function renderWater(sceneObj){
       moveFactor: {value: moveFactor},
       normalMap: {value: imageLoader.load('images/water-normal-map.png')},
       cameraPos: {value: camera.position},
-      // reflectionFactor: {value: 1.0}, for some reason doesn't work if set here :(
       depthMap: {value: refractionTexture.depthTexture},
       nearPlane: {value: near},
       farPlane: {value: far},
