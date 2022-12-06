@@ -39,6 +39,7 @@ uniform sampler2D reflectionTexture;
 uniform sampler2D refractionTexture;
 uniform sampler2D dudvMap;
 uniform sampler2D normalMap;
+uniform sampler2D depthMap;
 
 //light properties
 uniform mat3 lightProperties;
@@ -65,6 +66,15 @@ void main() {
   vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
   vec2 refractTexCoords = vec2(ndc.x, ndc.y);
 
+//soft texturing
+  float depth = texture(depthMap, refractTexCoords).r;
+  float far = 10000.0;
+  float near = 0.1;
+  float floorDistance = 2.0 * near * far / (far + near - (2.0 * depth - 1.0) * (far - near));
+  depth = -gl_FragCoord.z;
+  float waterDistance = 2.0 * near * far / (far + near - (2.0 * depth - 1.0) * (far - near));
+  float waterDepth = floorDistance - waterDistance;
+  
 //dudv distortion
   vec2 distortedTexCoords = texture(dudvMap, vec2(textureCoords.x + moveFactor, textureCoords.y)).rg*0.1;
   distortedTexCoords = textureCoords + vec2(distortedTexCoords.x, distortedTexCoords.y+moveFactor);
@@ -113,6 +123,12 @@ void main() {
   
   gl_FragColor = ambient + diffuse + specular;
   gl_FragColor.a = 1.0;
+  
+//experimentation for soft edges
+   // gl_FragColor = waterSurface;
+ //gl_FragColor.a = clamp(waterDepth / 5.0, 0.0, 1.0);
+// gl_FragColor.a = waterDepth + 100.0;
+// gl_FragColor = vec4(waterDepth/50.0);
 }
 `;
 
