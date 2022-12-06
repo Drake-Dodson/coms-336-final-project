@@ -5,7 +5,7 @@
 
 /* --- Configuration --- */
 const size = 3000;
-const skyboxSize = 4000;
+const skyboxSize = 8000;
 const sunRadius = 100;
 const fov = 75;
 const fullscreen = false;
@@ -30,25 +30,39 @@ const refractionClipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0))
 
 /* --- Scene Objects --- */
 const scene = new THREE.Scene();
-const lightPosition = new THREE.Vector3(-900, 200, -900);
 const camera = new THREE.PerspectiveCamera(fov, aspectRatio, 0.1, 10000);
 const controls = new OrbitControls(camera, renderer.domElement);
 let sun, skybox, water, light, bottom, island, cube;
 
-function loadSkyBox(sceneObj) {
-  // const material = new THREE.ShaderMaterial({
-  //   uniforms: {
-  //     color: {
-  //       value: new THREE.Vector3(0.66, 0.96,0.96)
-  //     }
-  //   },
-  //   vertexShader: vSkyboxShader,
-  //   fragmentShader: fSkyboxShader,
-  //   side: THREE.BackSide
-  // })
+/* --- Lighting Objects --- */
+const lightPosition = new THREE.Vector4(0, 100, 0, 1.0);
+var lightPropElements = new Float32Array([
+  0.7, 0.7, 0.7,
+  0.2, 0.7, 0.7,
+  0.7, 0.7, 0.7
+  ]);
 
-  let material = new THREE.MeshBasicMaterial({
-    color: 0x0076f5,
+var matPropElements = new Float32Array([
+    0.7, 0.7, 0.7,
+    0.3, 0.3, 0.3,
+    0.2, 0.2, 0.2,
+]);
+var shininess = 20.0;
+var lightFocus = 100;
+
+/* --- Movement Variables --- */
+var waveSpeed = 0.0002;
+var moveFactor = 0;
+
+function loadSkyBox(sceneObj) {
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      color: {
+        value: new THREE.Vector3(0.00, 0.5,0.96)
+      }
+    },
+    vertexShader: vSkyboxShader,
+    fragmentShader: fSkyboxShader,
     side: THREE.BackSide
   })
   let geometry = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
@@ -58,33 +72,28 @@ function loadSkyBox(sceneObj) {
 }
 
 function renderWater(sceneObj){
-  // const material = new THREE.MeshPhongMaterial({
-  //   color: 0x0000ff,
-  //   opacity: 0.4,
-  //   map: reflectionTexture.texture,
-  //   // envMap: reflectionTexture.texture,
-  //   // alphaMap: refractionTexture.texture,
-  //   combine: THREE.MixOperation,
-  //   transparent: true,
-  //   normalMap: imageLoader.load('images/water-normal-map.png'),
-  //   // normalMapType: THREE.ObjectSpaceNormalMap,
-  // })
-  //it also doesn't repeat like it's programmed to
-  // const mapRepeats = 150; //the map texture is 512x512
-  // material.normalMap.wrapS = THREE.RepeatWrapping
-  // material.normalMap.wrapT = THREE.RepeatWrapping
-  // material.normalMap.repeat.x=mapRepeats
-  // material.normalMap.repeat.y=mapRepeats
-  // material.normalScale.set(3, 3)
-
+  direction = new THREE.Vector4(0, -0, 0, 0);
+  direction = direction.applyMatrix4(camera.matrixWorldInverse);
   let material = new THREE.ShaderMaterial({
     uniforms: {
       reflectionTexture: { value: reflectionTexture.texture },
       refractionTexture: { value: refractionTexture.texture },
+      lightPosition: { value: lightPosition},
+      lightProperties: { value: lightPropElements},
+      shininess: { value: shininess},
+      lightFocus: {value: lightFocus},
+      fD: {value: new THREE.Vector3(direction.x, direction.y, direction.z)},
+      dudvMap: {value: imageLoader.load('images/dudv-map.png')},
+      moveFactor: {value: moveFactor},
+      normalMap: {value: imageLoader.load('images/water-normal-map.png')}
     },
     vertexShader: vWaterShader,
     fragmentShader: fWaterShader
   })
+
+  material.uniforms.dudvMap.value.wrapS = THREE.RepeatWrapping;
+  material.uniforms.dudvMap.value.wrapT = THREE.RepeatWrapping;
+
   let geometry = new THREE.PlaneGeometry(size, size)
 
   water = new THREE.Mesh(geometry, material)
@@ -116,9 +125,9 @@ function loadLights(lightPosition, sceneObj){
   let ambientLight = new THREE.AmbientLight(0xffffff);
   sceneObj.add(light, ambientLight);
 
-  // const lightHelper = new THREE.PointLightHelper(light)
-  //const gridHelper = new THREE.GridHelper(200, 50);
-  //scene.add(lightHelper, gridHelper)
+  const lightHelper = new THREE.PointLightHelper(light)
+  const gridHelper = new THREE.GridHelper(200, 50);
+  scene.add(lightHelper)
 }
 
 async function renderIsland(sceenObj) {
@@ -156,6 +165,35 @@ async function renderIsland(sceenObj) {
   );
 }
 
+async function renderIsland2(sceneObj) {
+  var redCube = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshPhongMaterial({
+      color: 0x880000,
+    }))
+  
+  redCube.position.set(0, 10, 0)
+  sceneObj.add(redCube)
+
+  var underwaterCube = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshPhongMaterial({
+      color: 0xe134eb,
+    }))
+  
+  underwaterCube.position.set(0, -10, 5)
+  sceneObj.add(underwaterCube)
+
+  var island = new THREE.Mesh(
+    new THREE.SphereGeometry(5, 5, 5),
+    new THREE.MeshPhongMaterial({
+      color: 0x008800,
+    }))
+  
+  island.position.set(0, 4, 0)
+  sceneObj.add(island)
+}
+
 function renderCube(sceneObj){
   cube = new THREE.Mesh(
     new THREE.BoxGeometry(1, 1, 1),
@@ -164,6 +202,17 @@ function renderCube(sceneObj){
     }))
 
   cube.position.set(-5, 1, -5)
+  sceneObj.add(cube)
+}
+
+function renderCube2(sceneObj){
+  cube = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshPhongMaterial({
+      color: 0x880000,
+    }))
+
+  cube.position.set(-5, -5, -5)
   sceneObj.add(cube)
 }
 
@@ -184,13 +233,13 @@ async function main(){
   renderCube(scene);
   loadSkyBox(scene);
   renderWater(scene);
-  renderSand(scene);
-  await renderIsland(scene);
+  //renderSand(scene);
+  renderIsland(scene);
 
   camera.position.set(10, 10, 10);
-  scene.fog = new THREE.Fog(0xffffff, 1000, 6000);
 
   let i = 0;
+  var waveSpeedIterator = waveSpeed;
   function animate() {
     controls.update()
 
@@ -199,13 +248,19 @@ async function main(){
     // water.material.normalMap.offset.x = i;
     // water.material.normalMap.offset.y = i;
 
+    if(moveFactor > 0.2){
+      waveSpeedIterator = -waveSpeed;
+    }
+    if(moveFactor < 0){
+      waveSpeedIterator = waveSpeed;
+    }
+    moveFactor += waveSpeedIterator;
+    water.material.uniforms.moveFactor.value = moveFactor;
+
     //prep camera for reflection
     //TODO: Camera position / angle seems to be a little off
     let distance = 2 * (camera.position.y - water.position.y)
-    let dir = new THREE.Vector3()
-    camera.getWorldDirection(dir)
-    console.log(dir.toArray())
-    let angle = 2 * dir.x;
+    let angle = 2 * camera.rotation.x;
     camera.position.y -= distance;
     camera.rotateX(-angle);
     water.material.visible = false;
