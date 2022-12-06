@@ -215,8 +215,8 @@ async function main(){
     if(moveFactor > 0.2){
       waveSpeedIterator = -waveSpeedIterator;
     }
-    if(moveFactor < 0.2){
-      waveSpeedIterator = waveSpeedIterator;
+    if(moveFactor > 0){
+      waveSpeedIterator = -waveSpeedIterator;
     }
     moveFactor += waveSpeedIterator;
     water.material.uniforms.moveFactor.value = moveFactor;
