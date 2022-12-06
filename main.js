@@ -11,7 +11,7 @@ const fov = 75;
 const fullscreen = true;
 const showReflection = false;
 const showRefraction = false;
-const showNormalMap = false; 
+const showNormalMap = true; 
 
 /* --- Initialization --- */
 const imageLoader = new THREE.TextureLoader()

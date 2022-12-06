@@ -85,7 +85,7 @@ void main()
   vec4 fracColor = texture2D(refractionTexture, refractTexCoords);
 
   vec4 normalMapColor = texture(normalMap, distortedTexCoords);
-  vec3 normal = vec3(normalMapColor.r * 2.0 - 1.0, normalMapColor.b, normalMapColor.g * 2.0 - 1.0);
+  vec3 normal = vec3(normalMapColor.r, normalMapColor.b, normalMapColor.g);
 
   vec3 N = normalize(normal);
   vec3 L = normalize(fL);
@@ -95,7 +95,7 @@ void main()
 
   vec4 waterSurface = mix(refColor, fracColor, 0.5);
 
-  //increases the green value of the surface 
+  //increases the green value of the surface to give distinction between sky and water
   waterSurface = vec4(waterSurface.x, waterSurface.y + 0.10, waterSurface.z,  1.0);
 
   vec4 ambientSurface = vec4(materialProperties[0], 1.0);
