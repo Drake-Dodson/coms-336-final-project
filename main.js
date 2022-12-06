@@ -238,7 +238,7 @@ async function main(){
   //renderSand(scene);
   renderIsland(scene);
 
-  camera.position.set(10, 10, 10);
+  camera.position.set(300, 20, 10);
 
   let i = 0;
   var waveSpeedIterator = waveSpeed;
@@ -260,12 +260,13 @@ async function main(){
     //prep camera for reflection
     //TODO: Camera position / angle seems to be a little off
     let distance = 2 * (camera.position.y - water.position.y)
-    let angle = 2 * camera.rotation.x;
+    let dir = new THREE.Vector3()
+    // camera.getWorldDirection(dir)
     camera.position.y -= distance;
-    camera.rotateX(-angle);
-    water.material.visible = false;
+    camera.lookAt(dir)
 
     //render reflection
+    water.material.visible = false;
     renderer.clippingPlanes = [reflectionClipPlane]
     renderer.setRenderTarget(reflectionTexture)
     renderer.render(scene, camera)
@@ -278,7 +279,7 @@ async function main(){
 
     //reset camera
     camera.position.y += distance;
-    camera.rotateX(angle)
+    camera.lookAt(dir)
 
     //render refraction
     renderer.clippingPlanes = [refractionClipPlane]
