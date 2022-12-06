@@ -1,8 +1,6 @@
 //TODO: Textured sand
 //TODO: Clouds
-//TODO: DUDV map
 //TODO: Fresnel effect
-//TODO: Normal map (again)
 //TODO: Soft edges
 
 /* --- Configuration --- */
@@ -204,7 +202,10 @@ async function main(){
     //prep camera for reflection
     //TODO: Camera position / angle seems to be a little off
     let distance = 2 * (camera.position.y - water.position.y)
-    let angle = 2 * camera.rotation.x;
+    let dir = new THREE.Vector3()
+    camera.getWorldDirection(dir)
+    console.log(dir.toArray())
+    let angle = 2 * dir.x;
     camera.position.y -= distance;
     camera.rotateX(-angle);
     water.material.visible = false;
