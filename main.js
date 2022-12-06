@@ -1,6 +1,4 @@
-//TODO: Textured sand
 //TODO: Clouds
-//TODO: Fresnel effect
 //TODO: Soft edges
 
 /* --- Configuration --- */
@@ -8,10 +6,12 @@ const size = 3000;
 const skyboxSize = 8000;
 const sunRadius = 100;
 const fov = 75;
-const fullscreen = true;
-const showReflection = false;
-const showRefraction = false;
-const showNormalMap = true; 
+const fullscreen = false;
+const showReflection = true;
+const showRefraction = true;
+const showNormalMap = true;
+const far = 10000;
+const near = 0.1;
 
 /* --- Initialization --- */
 const imageLoader = new THREE.TextureLoader()
@@ -31,7 +31,7 @@ const refractionClipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0))
 
 /* --- Scene Objects --- */
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(fov, aspectRatio, 0.1, 10000);
+const camera = new THREE.PerspectiveCamera(fov, aspectRatio, near, far);
 const controls = new OrbitControls(camera, renderer.domElement);
 let sun, skybox, water, light, bottom, island, cube;
 
@@ -92,6 +92,9 @@ function renderWater(sceneObj){
       normalMap: {value: imageLoader.load('images/water-normal-map.png')},
       cameraPos: {value: camera.position},
       // reflectionFactor: {value: 1.0}, for some reason doesn't work if set here :(
+      depthMap: {value: refractionTexture.depthTexture},
+      nearPlane: {value: near},
+      farPlane: {value: far},
     },
     vertexShader: vWaterShader,
     fragmentShader: fWaterShader
@@ -153,9 +156,9 @@ async function renderIsland(sceenObj) {
         island.scale.x = 0.5
         island.scale.y = 0.5
         island.scale.z = 0.5
-        island.position.x = -200
-        island.position.y = 10
-        island.position.z = -100
+        island.position.x = 0
+        island.position.y = 0
+        island.position.z = 0
 
         //have to find the child that is the mesh to load the texture onto it
         island.traverse( function ( child ) {
@@ -240,7 +243,7 @@ async function main(){
   renderCube(scene);
   loadSkyBox(scene);
   renderWater(scene);
-  //renderSand(scene);
+  renderSand(scene);
   await renderIsland(scene);
 
   camera.position.set(10, 10, 10);
