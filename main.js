@@ -236,9 +236,9 @@ async function main(){
   loadSkyBox(scene);
   renderWater(scene);
   //renderSand(scene);
-  renderIsland(scene);
+  await renderIsland(scene);
 
-  camera.position.set(300, 20, 10);
+  camera.position.set(10, 10, 10);
 
   let i = 0;
   var waveSpeedIterator = waveSpeed;
@@ -258,10 +258,8 @@ async function main(){
     water.material.uniforms.moveFactor.value = moveFactor;
 
     //prep camera for reflection
-    //TODO: Camera position / angle seems to be a little off
     let distance = 2 * (camera.position.y - water.position.y)
-    let dir = new THREE.Vector3()
-    // camera.getWorldDirection(dir)
+    let dir = new THREE.Vector3() //This is a jank way that only works cuz we're using orbit controls
     camera.position.y -= distance;
     camera.lookAt(dir)
 
