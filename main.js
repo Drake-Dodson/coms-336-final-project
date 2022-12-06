@@ -86,7 +86,9 @@ function renderWater(sceneObj){
       fD: {value: new THREE.Vector3(direction.x, direction.y, direction.z)},
       dudvMap: {value: imageLoader.load('images/dudv-map.png')},
       moveFactor: {value: moveFactor},
-      normalMap: {value: imageLoader.load('images/water-normal-map.png')}
+      normalMap: {value: imageLoader.load('images/water-normal-map.png')},
+      cameraPos: {value: camera.position},
+      // reflectionFactor: {value: 1.0}, for some reason doesn't work if set here :(
     },
     vertexShader: vWaterShader,
     fragmentShader: fWaterShader

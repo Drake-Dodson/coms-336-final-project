@@ -4,12 +4,13 @@ precision mediump float;
 
 uniform vec4 lightPosition;
 uniform vec4 direction;
+uniform vec3 cameraPos;
 
 varying vec3 fL;
 varying vec3 fN;
 varying vec3 fV;
 varying vec2 textureCoords;
-
+varying vec3 toCameraVector;
 varying vec4 clipSpace;
 
 const float tiling = 100.0;
@@ -25,6 +26,8 @@ void main() {
   fN = normalMatrix * position;
 
   fV = normalize(-(position).xyz);
+  
+  toCameraVector = cameraPos - position.xyz;
 
   clipSpace = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   gl_Position = clipSpace;
@@ -45,6 +48,7 @@ uniform mat3 materialProperties;
 uniform mat3 lightProperties;
 uniform float shininess;
 uniform float lightFocus;
+uniform float reflectionFactor;
 
 uniform float moveFactor;
 
@@ -53,7 +57,7 @@ uniform vec3 fD;
 varying vec3 fL;
 varying vec3 fN;
 varying vec3 fV;
-
+varying vec3 toCameraVector; 
 varying vec2 textureCoords;
 
 const float waveStrength = 0.02;
@@ -76,7 +80,7 @@ void main()
   
   reflectTexCoords += totalDistortion;
   // reflectTexCoords.x = clamp(refractTexCoords.x, 0.001, 0.999);
-  // reflectTexCoords.y = clamp(refractTexCoords.y, 0.001, 0.999);
+  // reflectTexCoords.y = clamp(refractTexCoords.y, -0.999, -0.001);
   
 
 
@@ -90,10 +94,14 @@ void main()
   vec3 N = normalize(normal);
   vec3 L = normalize(fL);
   vec3 V = normalize(fV);
-
+  
+  vec3 viewVector = normalize(toCameraVector);
+  float refractiveFactor = dot(viewVector, N);
+  refractiveFactor = pow(refractiveFactor, 5.0);
+  
   vec3 R = reflect(-L, N);
 
-  vec4 waterSurface = mix(refColor, fracColor, 0.5);
+  vec4 waterSurface = mix(refColor, fracColor, refractiveFactor);
 
   //increases the green value of the surface to give distinction between sky and water
   waterSurface = vec4(waterSurface.x, waterSurface.y + 0.10, waterSurface.z,  1.0);
