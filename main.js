@@ -1,3 +1,5 @@
+//TODO: Better lighting
+//TODO: Vertex Displacement
 //TODO: Clouds
 //TODO: Soft edges
 
@@ -10,6 +12,9 @@ const fullscreen = true;
 const showReflection = false;
 const showRefraction = false;
 const showNormalMap = true;
+const showSand = false;
+const showCubes = false;
+const showIsland = true;
 const far = 10000;
 const near = 0.1;
 
@@ -33,28 +38,23 @@ const refractionClipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0))
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(fov, aspectRatio, near, far);
 const controls = new OrbitControls(camera, renderer.domElement);
-let sun, skybox, water, light, bottom, island, cube;
+let sun, skybox, water, light, bottom, island, cube, cube2, cube3, cube4, cube5;
 
 /* --- Lighting Objects --- */
 const lightPosition = new THREE.Vector4(-900, 300, -900, 1.0);
-var lightPropElements = new Float32Array([
+const lightPropElements = new Float32Array([
   0.7, 0.7, 0.7,
   0.2, 0.7, 0.7,
   0.7, 0.7, 0.7
   ]);
-
-var matPropElements = new Float32Array([
-    0.7, 0.7, 0.7,
-    0.3, 0.3, 0.3,
-    0.2, 0.2, 0.2,
-]);
-var shininess = 20.0;
-var lightFocus = 100;
+const shininess = 20.0;
+const lightFocus = 100;
 
 /* --- Movement Variables --- */
-var waveSpeed = 0.0002;
-var moveFactor = 0;
+const waveSpeed = 0.0002;
+let moveFactor = 0;
 
+/* --- Render Functions --- */
 function loadSkyBox(sceneObj) {
   const material = new THREE.ShaderMaterial({
     uniforms: {
@@ -98,7 +98,7 @@ function renderWater(sceneObj){
     transparent: true,
   })
 
-  //make the textures wrap
+  //make the textures and maps wrap
   reflectionTexture.texture.wrapS = THREE.RepeatWrapping;
   reflectionTexture.texture.wrapT = THREE.RepeatWrapping;
   if(showNormalMap){
@@ -136,10 +136,6 @@ function loadLights(lightPosition, sceneObj){
 
   let ambientLight = new THREE.AmbientLight(0xffffff);
   sceneObj.add(light, ambientLight);
-
-  //const lightHelper = new THREE.PointLightHelper(light)
-  const gridHelper = new THREE.GridHelper(200, 50);
-  //scene.add(lightHelper)
 }
 
 async function renderIsland(sceenObj) {
@@ -177,7 +173,7 @@ async function renderIsland(sceenObj) {
   );
 }
 
-function renderCube(sceneObj){
+function renderCubes(sceneObj){
   cube = new THREE.Mesh(
     new THREE.BoxGeometry(8, 8, 8),
     new THREE.MeshPhongMaterial({
@@ -195,7 +191,7 @@ function renderCube(sceneObj){
 
   cube2.position.set(0, 25, -90)
   sceneObj.add(cube2)
-  
+
   cube3 = new THREE.Mesh(
     new THREE.BoxGeometry(15, 15, 15),
     new THREE.MeshPhongMaterial({
@@ -213,7 +209,7 @@ function renderCube(sceneObj){
 
   cube4.position.set(-400, -100, -100)
   sceneObj.add(cube4)
-  
+
   cube5 = new THREE.Mesh(
     new THREE.BoxGeometry(8, 8, 8),
     new THREE.MeshPhongMaterial({
@@ -234,15 +230,17 @@ function renderSun(sceneObj){
   sceneObj.add(sun)
 }
 
+/* --- Main Animation ---*/
 async function main(){
   // Load objects into scene
   loadLights(lightPosition, scene);
   renderSun(scene);
-  renderCube(scene);
   loadSkyBox(scene);
   renderWater(scene);
-  // renderSand(scene);
-  await renderIsland(scene);
+  // Optional renders
+  if (showCubes) { renderCubes(scene); }
+  if (showSand) { renderSand(scene); }
+  if (showIsland) { await renderIsland(scene); }
 
   camera.position.set(75, 75, 75);
 
@@ -253,7 +251,7 @@ async function main(){
 
     //move normal map
     i += 0.001;
-
+    //move DuDv map
     if(moveFactor > 0.2){
       waveSpeedIterator = -waveSpeedIterator;
     }
